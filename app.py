@@ -5,7 +5,7 @@ from datetime import datetime, date, time, timedelta
 # ------------------------------------
 # Page Config for Wide Layout
 # ------------------------------------
-st.set_page_config(page_title="Scheduling Tool", layout="wide")
+st.set_page_config(page_title="Trainee Shadow Schedule", layout="wide")
 
 # ------------------------------------
 # Scheduling Logic
@@ -129,7 +129,7 @@ def parse_fuzzy_time_range(range_str: str):
     return start_t, end_t
 
 # ------------------------------------
-# Helper: shorten a trainee's name to "FirstName LastInitial."
+# Helper: "FirstName LastInitial."
 # ------------------------------------
 def shorten_name(full_name: str) -> str:
     txt = full_name.strip()
@@ -137,26 +137,35 @@ def shorten_name(full_name: str) -> str:
         return txt
     parts = txt.split()
     if len(parts) > 1:
-        # e.g. "Stryder Mark Smith" => "Stryder S."
         return f"{parts[0]} {parts[-1][0]}."
     else:
-        # Only one name => "Cameron" => "Cameron"
         return parts[0]
 
 # ------------------------------------
 # Main Streamlit App
 # ------------------------------------
 def main():
-    st.title("Scheduling Tool")
-
-    col_ratio = [1.5, 1.5, 1.0]
-    col1, col2, col3 = st.columns(col_ratio)
+    st.markdown(
+    """
+    <div style="text-align: center; margin-bottom: 20px;">
+      <h1>Get-Me-Outta-This-Room Calculator</h1>
+    </div>
+    """,
+    unsafe_allow_html=True
+    )
+    
+    col_ratio = [1.0, 0.75, 2.5, 1.0, 1.0]
+    col1, col2, col3, col4, col5 = st.columns(col_ratio)
 
     with col1:
+        some_col_one_var = 0
+        
+    with col2:
         time_range_str = st.text_input(
-            "Time Range (e.g. '11-5', '9:30-1pm')",
-            value="2-6"
+            "Time Range",
+            value="3-6"
         )
+        
         duration = st.number_input(
             label="Duration (min)",
             value=30,
@@ -164,29 +173,42 @@ def main():
             min_value=15,
             max_value=120
         )
-        generate_btn = st.button("Generate Schedule")
-
-    with col2:
+        
+    with col3:
         all_stations = [
             "Row A", "Row C", "Row D", "Row E", "Row F",
             "Row G", "Row H", "Row I", "Row J", "Row K",
-            "Row L", "Row BB", "Row CLR"
+            "Row L", "Bulk ", " CLR "
         ]
         chosen_stations = st.multiselect(
             "Pick all stations you want to include:",
             all_stations,
-            default=["Row C", "Row D", "Row E", "Row G", "Row H", "Row I", "Row J", "Row K", "Row L"]
+            default=["Row C", "Row D", "Row E", "Row H", "Row J", "Row K", "Row L"]
         )
 
-    with col3:
-        names_entries = st.text_area(
-            "Trainee Names - One per Line:",
-            value="Cameron M\nStryder Smith\nKayla White\nStacey Lamb\nAmanda Simpkin\nLeigha Bodky",
-            height=200
+        st.markdown(
+        """
+        <div style="margin-bottom: 20px;">
+        </div>
+        """,
+        unsafe_allow_html=True
         )
+
+        col1, col2, col3 = st.columns([1.3,2,0.7])
+        with col2:
+            generate_btn = st.button("Generate Schedule")
+
+    with col4:
+        names_entries = st.text_area(
+            "Trainees",
+            value="Ariel Currie\nJade Wilson\nJen Cochrane",
+            height=160
+        )
+
+    with col5:
+        some_col_five_var = 0
 
     if generate_btn:
-        # 1) parse time range
         try:
             start_t, end_t = parse_fuzzy_time_range(time_range_str)
         except ValueError as e:
@@ -223,7 +245,6 @@ def main():
             time_slots_dt
         )
 
-        # Shorten all names in final_schedule
         for r_idx, row in enumerate(final_schedule):
             for c_idx, name_val in enumerate(row):
                 final_schedule[r_idx][c_idx] = shorten_name(name_val)
@@ -237,25 +258,29 @@ def main():
 
         df = pd.DataFrame(table_rows, columns=table_header)
 
-        # Hide the numeric index by making "Time" into the index,
-        # so that the left column is the times and we do not see a 0..X index.
         df = df.set_index("Time")
-        # Remove the index name so it looks a bit cleaner
         df.index.name = None
 
-        # Add a little CSS so everything is centred:
         st.markdown(
             """
             <style>
             table td, table th {
-                text-align: center !important;
+                text-align: center !important; background-color: #101726;
             }
             </style>
             """,
             unsafe_allow_html=True
         )
 
-        st.subheader("Schedule")
+        st.subheader("Teamlead Shadow Schedule")
+        st.markdown(
+        """
+        <div style="margin-top: -15px; margin-bottom: 20px; font-style: italic; font-size: 14px;">
+        <p>You can reduce browser window size to reduce table size for screenshot</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+        )
         st.table(df)
 
 if __name__ == "__main__":
